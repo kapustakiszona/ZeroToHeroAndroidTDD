@@ -13,6 +13,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
         text = findViewById(R.id.titleTextView)
         button = findViewById(R.id.changeButton)
 
