@@ -1,5 +1,6 @@
 package ru.easycode.zerotoheroandroidtdd
 
+import androidx.lifecycle.LiveData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -12,9 +13,11 @@ import org.junit.Test
 
 /**
  * Please also check out the ui test
- * @see ru.easycode.zerotoheroandroidtdd.Task019Test
+ * @see ru.easycode.zerotoheroandroidtdd.Task018Test
  *
  * And other unit tests
+ * @see RepositoryTest
+ * @see ServiceTest
  */
 class MainViewModelTest {
 
@@ -46,7 +49,7 @@ class MainViewModelTest {
 
     @Test
     fun test() {
-        repository.expectResult(LoadResult.Success(SimpleResponse(text = "testingText")))
+        repository.expectResponse(SimpleResponse(text = "testingText"))
 
         viewModel.load()
         liveDataWrapper.checkUpdateCalls(
@@ -85,18 +88,44 @@ private interface FakeBundleWrapper : BundleWrapper.Mutable {
     }
 }
 
+private interface FakeLiveDataWrapper : LiveDataWrapper {
+
+    fun checkUpdateCalls(expected: List<UiState>)
+
+    class Base : FakeLiveDataWrapper {
+
+        private val actualCallsList = mutableListOf<UiState>()
+
+        override fun checkUpdateCalls(expected: List<UiState>) {
+            assertEquals(expected, actualCallsList)
+        }
+
+        override fun save(bundleWrapper: BundleWrapper.Save) {
+            bundleWrapper.save(actualCallsList.last())
+        }
+
+        override fun update(value: UiState) {
+            actualCallsList.add(value)
+        }
+
+        override fun liveData(): LiveData<UiState> {
+            throw IllegalStateException("not used in test")
+        }
+    }
+}
+
 private interface FakeRepository : Repository {
 
-    fun expectResult(result: LoadResult)
+    fun expectResponse(simpleResponse: SimpleResponse)
 
     fun checkLoadCalledTimes(times: Int)
 
     class Base : FakeRepository {
 
-        private lateinit var result: LoadResult
+        private lateinit var response: SimpleResponse
 
-        override fun expectResult(result: LoadResult) {
-            this.result = result
+        override fun expectResponse(simpleResponse: SimpleResponse) {
+            response = simpleResponse
         }
 
         private var actualCalledTimes: Int = 0
@@ -105,9 +134,9 @@ private interface FakeRepository : Repository {
             assertEquals(times, actualCalledTimes)
         }
 
-        override suspend fun load(): LoadResult {
+        override suspend fun load(): SimpleResponse {
             actualCalledTimes++
-            return result
+            return response
         }
     }
 }
