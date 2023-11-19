@@ -1,5 +1,6 @@
 package ru.easycode.zerotoheroandroidtdd
 
+import android.util.Log
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
